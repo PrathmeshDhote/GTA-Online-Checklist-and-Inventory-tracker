@@ -190,15 +190,20 @@
     });
 
     async function saveData() {
-        const checked = Array.from(document.querySelectorAll('.mission-check:checked')).map(cb => cb.dataset.id);
-        localStorage.setItem('gta_sync_save', JSON.stringify(checked));
-        if (user) {
-            await setDoc(doc(doc(db, "users", user.uid)), { progress: checked });
+    const checked = Array.from(document.querySelectorAll('.mission-check:checked')).map(cb => cb.dataset.id);
+    localStorage.setItem('gta_sync_save', JSON.stringify(checked));
+    if (user) {
+        try {
+            // Corrected reference: db, collection, documentID
+            await setDoc(doc(db, "users", user.uid), { progress: checked });
             const note = document.getElementById('saveNotification');
             note.classList.add('show');
             setTimeout(() => note.classList.remove('show'), 2000);
+        } catch (error) {
+            console.error("Sync Error:", error);
         }
     }
+}
 
     async function loadData() {
         let saved = JSON.parse(localStorage.getItem('gta_sync_save') || '[]');
@@ -265,3 +270,4 @@
 </script>
 </body>
 </html>
+
