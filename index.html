@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>GTA Online: Career Tracker</title>
+    <title>GTA Online: Checklist</title>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -13,63 +13,43 @@
             font-family: 'Inter', sans-serif;
             background-color: #f1f5f9;
             color: #1e293b;
+            transition: background-color 0.3s ease;
         }
 
-        /* Logo Hover Animation */
-        .brand-logo {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-        }
-
-        .brand-logo:hover {
-            transform: scale(1.15); /* Enlarges logo */
-            filter: brightness(1.1); /* Adds a slight glow effect */
-        }
-
-        .nav-tab {
-            position: relative;
-            transition: all 0.3s ease;
-            color: #64748b;
-        }
-
-        .nav-tab.active {
-            color: #2563eb;
-        }
-
-        .nav-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 20%;
-            right: 20%;
-            height: 3px;
-            background: #2563eb;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .mission-label {
-            transition: all 0.2s ease;
-            border: 1px solid #e2e8f0;
-        }
-
-        .mission-label:hover {
-            background: #ffffff;
-            border-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
+        /* Fix: Notification layering - Z-index adjusted to be below Navbar (20) */
         #saveNotification { 
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            transform: translateY(-120%); 
+            transform: translateY(-150%); 
+            z-index: 10; 
         }
-        
-        #saveNotification.show { transform: translateY(0); }
-        .tab-content.hidden { display: none; }
+        #saveNotification.show { transform: translateY(130px); } /* Adjusted to show below sticky nav */
 
-        .mission-check {
-            accent-color: #2563eb;
+        /* Dark Mode logic */
+        body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
+        .dark-mode .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-mode .text-slate-900, .dark-mode .text-slate-800 { color: #f1f5f9 !important; }
+        .dark-mode .mission-label { background-color: #1e293b; border-color: #334155; }
+        .dark-mode #searchInput { background-color: #1e293b; color: white; border-color: #475569; }
+        .dark-mode .bg-slate-50 { background-color: #0f172a !important; }
+        
+        /* Fix: Header contrast in Dark Mode */
+        .dark-mode .bg-slate-800 { background-color: #334155 !important; }
+
+        .brand-logo { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .brand-logo:hover { transform: scale(1.15); filter: brightness(1.1); }
+
+        .nav-tab { position: relative; transition: all 0.3s ease; color: #64748b; }
+        .nav-tab.active { color: #2563eb; }
+        .nav-tab.active::after {
+            content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 3px;
+            background: #2563eb; border-radius: 10px 10px 0 0;
         }
+
+        .mission-label { transition: all 0.2s ease; border: 1px solid #e2e8f0; }
+        .mission-label:hover { border-color: #2563eb; transform: translateY(-2px); }
+        
+        .tab-content.hidden { display: none; }
+        .mission-check { accent-color: #2563eb; }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -78,7 +58,7 @@
 </head>
 <body class="pt-52"> 
 
-<div id="saveNotification" class="fixed top-5 right-5 z-[60] bg-white shadow-2xl p-4 rounded-xl flex items-center gap-4 border-l-4 border-blue-600">
+<div id="saveNotification" class="fixed top-5 right-5 bg-white shadow-2xl p-4 rounded-xl flex items-center gap-4 border-l-4 border-blue-600">
     <div class="bg-blue-50 p-2 rounded-lg text-blue-600"><span>⚡</span></div>
     <div>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cloud Sync</p>
@@ -107,13 +87,15 @@
                     <span class="w-2 h-2 rounded-full bg-red-500"></span> Offline Mode
                 </button>
             </div>
+            <button onclick="toggleDarkMode()" id="themeToggle" class="bg-slate-800 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded border border-slate-700 hover:bg-slate-700">
+                🌙 Dark Mode
+            </button>
         </div>
     </nav>
 
     <nav class="bg-white border-b border-slate-200 py-4 px-6 shadow-sm">
         <div class="max-w-screen-xl mx-auto flex justify-between items-center">
             <img src="Pratham-Webs logo.png" class="brand-logo h-10 w-auto" alt="Logo">
-            
             <div class="flex gap-12 text-right">
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Outstanding Debt</p>
@@ -121,7 +103,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Net Worth Invested</p>
-                    <span id="moneyCounter" class="text-4xl font-black text-emerald-600 tracking-tighter drop-shadow-sm">$0</span>
+                    <span id="moneyCounter" class="text-4xl font-black text-emerald-600 tracking-tighter">$0</span>
                 </div>
             </div>
         </div>
@@ -142,7 +124,7 @@
     <div class="mb-8 flex gap-4">
         <div class="relative flex-grow">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Filter Asset Inventory..." class="w-full bg-white border border-slate-200 p-4 pl-12 rounded-xl text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all shadow-sm">
+            <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Filter Asset Inventory..." class="w-full bg-white border border-slate-200 p-4 pl-12 rounded-xl text-slate-900 outline-none focus:border-blue-500 transition-all shadow-sm">
         </div>
         <button onclick="resetChecklist()" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold px-8 py-4 rounded-xl transition-all uppercase text-xs tracking-widest">Wipe Data</button>
     </div>
@@ -154,10 +136,10 @@
                 <span id="progressText" class="text-6xl font-black text-slate-900 tracking-tighter">0%</span>
             </div>
             <div class="text-right">
-                <span id="itemCount" class="bg-slate-100 px-4 py-2 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">0 / 0 Assets Secured</span>
+                <span id="itemCount" class="bg-slate-100 dark:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">0 / 0 Assets</span>
             </div>
         </div>
-        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-[1px] border border-slate-200">
+        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden p-[1px] border border-slate-200">
             <div id="progressBar" class="bg-gradient-to-r from-blue-700 to-blue-400 h-full rounded-full transition-all duration-1000 w-0 shadow-sm"></div>
         </div>
     </div>
@@ -188,6 +170,14 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
+
+    window.toggleDarkMode = () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        document.getElementById('themeToggle').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        localStorage.setItem('gta_theme', isDark ? 'dark' : 'light');
+    };
+    if (localStorage.getItem('gta_theme') === 'dark') toggleDarkMode();
 
     const dataSet = {
         heists: { title: "Heists & Story Contracts", icon: "🎭", color: "blue", bg: "bg-slate-800", list: [
@@ -246,17 +236,10 @@
     let globalTotalWorth = 0;
     Object.values(dataSet).forEach(cat => cat.list.forEach(i => globalTotalWorth += i.p));
 
-    window.toggleLoginModal = () => {
-        document.getElementById('loginModal').classList.toggle('hidden');
-    };
+    window.toggleLoginModal = () => { document.getElementById('loginModal').classList.toggle('hidden'); };
 
     document.getElementById('googleSignInBtn').onclick = async () => {
-        try {
-            await signInWithPopup(auth, provider);
-            window.toggleLoginModal();
-        } catch (e) {
-            console.error("Auth Error:", e);
-        }
+        try { await signInWithPopup(auth, provider); window.toggleLoginModal(); } catch (e) { console.error(e); }
     };
 
     onAuthStateChanged(auth, async (u) => {
@@ -288,9 +271,7 @@
             const docSnap = await getDoc(doc(db, "users", user.uid));
             if (docSnap.exists()) saved = docSnap.data().progress;
         }
-        document.querySelectorAll('.mission-check').forEach(cb => {
-            cb.checked = saved.includes(cb.dataset.id);
-        });
+        document.querySelectorAll('.mission-check').forEach(cb => { cb.checked = saved.includes(cb.dataset.id); });
         updateStats();
     }
 
@@ -300,19 +281,18 @@
         const pc = all.length > 0 ? Math.round((checked.length / all.length) * 100) : 0;
         document.getElementById('progressBar').style.width = pc + '%';
         document.getElementById('progressText').innerText = pc + '%';
-        document.getElementById('itemCount').innerText = `${checked.length} / ${all.length} Items Secured`;
-        const totalInvested = checked.reduce((acc, cb) => acc + parseInt(cb.dataset.price), 0);
-        document.getElementById('moneyCounter').innerText = '$' + totalInvested.toLocaleString();
-        document.getElementById('remainingWorth').innerText = '-$' + (globalTotalWorth - totalInvested).toLocaleString();
+        document.getElementById('itemCount').innerText = `${checked.length} / ${all.length} Assets Secured`;
+        const total = checked.reduce((acc, cb) => acc + parseInt(cb.dataset.price), 0);
+        document.getElementById('moneyCounter').innerText = '$' + total.toLocaleString();
+        document.getElementById('remainingWorth').innerText = '-$' + (globalTotalWorth - total).toLocaleString();
     }
 
     window.switchTab = (tabId) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById(tabId + 'Page').classList.remove('hidden');
-        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-        const tabs = document.querySelectorAll('.nav-tab');
-        tabs.forEach(t => {
-            if(t.getAttribute('onclick').includes(tabId)) t.classList.add('active');
+        document.querySelectorAll('.nav-tab').forEach(el => {
+            el.classList.remove('active');
+            if(el.getAttribute('onclick').includes(tabId)) el.classList.add('active');
         });
     };
 
@@ -326,21 +306,48 @@
     window.resetChecklist = () => {
         if(confirm("Factory Reset Progress?")) {
             document.querySelectorAll('.mission-check').forEach(cb => cb.checked = false);
-            saveData();
-            updateStats();
+            saveData(); updateStats();
         }
     };
 
+    // Render logic
     Object.keys(dataSet).forEach(key => {
         const data = dataSet[key];
-        document.getElementById(key + 'Page').innerHTML = `
+        const container = document.getElementById(key + 'Page');
+        
+        let content = `
             <div class="bg-white rounded-2xl overflow-hidden mb-10 shadow-sm border border-slate-200">
                 <div class="p-6 ${data.bg} border-b border-white/10 flex items-center justify-between">
                     <h3 class="text-sm font-black uppercase tracking-[0.4em] italic text-white flex items-center gap-3">
                         <span class="text-xl">${data.icon}</span> ${data.title}
                     </h3>
                 </div>
-                <div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-8">`;
+
+        if (key === 'vehicles') {
+            const cats = [...new Set(data.list.map(i => i.c))];
+            content += cats.map(cat => `
+                <div class="mb-10 last:mb-0">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-slate-200"></span> ${cat} Class
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${data.list.filter(i => i.c === cat).map(item => {
+                            const idx = data.list.indexOf(item);
+                            return `
+                            <label class="mission-label flex items-center p-5 rounded-xl bg-slate-50 cursor-pointer">
+                                <input type="checkbox" data-id="${key}-${idx}" data-price="${item.p}" class="mission-check w-6 h-6 rounded border-slate-300">
+                                <div class="ml-5">
+                                    <p class="font-bold text-slate-800 text-sm tracking-tight leading-none">${item.n}</p>
+                                    <p class="text-[11px] font-black text-emerald-600 mt-2 tracking-widest leading-none">$${item.p.toLocaleString()}</p>
+                                </div>
+                            </label>`;
+                        }).join('')}
+                    </div>
+                </div>`).join('');
+        } else {
+            content += `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${data.list.map((item, i) => `
                         <label class="mission-label flex items-center p-5 rounded-xl bg-slate-50 cursor-pointer">
                             <input type="checkbox" data-id="${key}-${i}" data-price="${item.p}" class="mission-check w-6 h-6 rounded border-slate-300">
@@ -348,17 +355,15 @@
                                 <p class="font-bold text-slate-800 text-sm tracking-tight leading-none">${item.n}</p>
                                 <p class="text-[11px] font-black text-emerald-600 mt-2 tracking-widest leading-none">$${item.p.toLocaleString()}</p>
                             </div>
-                        </label>
-                    `).join('')}
-                </div>
-            </div>`;
+                        </label>`).join('')}
+                </div>`;
+        }
+        content += `</div></div>`;
+        container.innerHTML = content;
     });
 
     document.addEventListener('change', (e) => {
-        if(e.target.classList.contains('mission-check')) {
-            updateStats();
-            saveData();
-        }
+        if(e.target.classList.contains('mission-check')) { updateStats(); saveData(); }
     });
 
     loadData();
